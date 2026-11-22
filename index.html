@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitoring Kotak Sampah (V1)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1e293b;
+      padding: 2rem;
+      border-radius: 14px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .val {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 1rem 0;
+      color: #38bdf8;
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div>Status Kotak Sampah (V1)</div>
+    <div class="val" id="nilai">Memuat...</div>
+    <div class="meta" id="status">Menghubungkan ke server SGP1...</div>
+  </div>
+
+  <script>
+    const BLYNK_SERVER = "https://sgp1.blynk.cloud";
+    const AUTH_TOKEN = "qKsDtxnYUTqzItJ0q8yynhL00qoAlRd1";
+    const PIN = "v1";
+
+    async function cekDataV1() {
+      try {
+        const url = `${BLYNK_SERVER}/external/api/get?token=${encodeURIComponent(AUTH_TOKEN)}&${PIN}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const nilai = await res.text();
+        document.getElementById("nilai").textContent = nilai;
+        document.getElementById("status").textContent =
+          "Update terakhir: " + new Date().toLocaleTimeString("id-ID");
+      } catch (err) {
+        document.getElementById("status").textContent = "Gagal ambil V1: " + err.message;
+      }
+    }
+
+    cekDataV1();
+    setInterval(cekDataV1, 5000);
+  </script>
+</body>
+</html>
