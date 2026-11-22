@@ -3,67 +3,312 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monitoring Kotak Sampah (V1)</title>
+  <title>Monitoring Kotak Sampah Pintar</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: #0f172a;
       color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Navbar & Dropdown Menu --- */
+    .navbar {
+      background: #1e293b;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #38bdf8;
+      cursor: pointer;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    .nav-item {
+      position: relative;
+      cursor: pointer;
+      font-weight: 500;
+      color: #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .nav-item:hover {
+      background: #334155;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 0.4rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      min-width: 220px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+    .dropdown-menu.show {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 0.85rem 1.1rem;
+      color: #f8fafc;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: background 0.2s;
+    }
+    .dropdown-item:hover {
+      background: #0284c7;
+    }
+
+    /* --- Main Content --- */
+    .container {
+      flex: 1;
       display: grid;
       place-items: center;
-      min-height: 100vh;
-      margin: 0;
+      padding: 2rem 1rem;
     }
     .card {
       background: #1e293b;
       padding: 2rem;
-      border-radius: 14px;
+      border-radius: 16px;
       text-align: center;
-      width: 320px;
+      width: 100%;
+      max-width: 390px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      border: 1px solid #334155;
+    }
+    .hidden {
+      display: none;
+    }
+
+    /* --- Halaman Profile --- */
+    .avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      display: grid;
+      place-items: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+      color: #0f172a;
+    }
+    .profile-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .profile-sub {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+    .btn-primary {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    /* --- Halaman Monitoring Realtime --- */
+    .badge-live {
+      display: inline-block;
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .label {
+      font-size: 0.9rem;
+      color: #94a3b8;
     }
     .val {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
-      margin: 1rem 0;
+      margin: 0.4rem 0 1.4rem;
       color: #38bdf8;
     }
+    .kapasitas-box {
+      background: #0f172a;
+      padding: 1.1rem;
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+    }
+    .kapasitas-angka {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin: 0.3rem 0 0.7rem;
+    }
+    .progress-bg {
+      background: #334155;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #22c55e;
+      transition: width 0.4s ease, background-color 0.4s ease;
+    }
     .meta {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #94a3b8;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div>Status Kotak Sampah (V1)</div>
-    <div class="val" id="nilai">Memuat...</div>
-    <div class="meta" id="status">Menghubungkan ke server SGP1...</div>
-  </div>
+
+  <!-- Navigasi Atas -->
+  <nav class="navbar">
+    <div class="brand" onclick="bukaHalaman('profile')">Sistem Komputer IoT</div>
+    <div class="nav-menu">
+      <div class="nav-item" id="profileBtn" onclick="toggleDropdown(event)">
+        Profile ▾
+        <div class="dropdown-menu" id="profileDropdown">
+          <div class="dropdown-item" onclick="bukaHalaman('profile')">
+            👤 Profil Pengembang
+          </div>
+          <div class="dropdown-item" onclick="bukaHalaman('iot')">
+            🗑️ Tempat Sampah Pintar
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Konten Utama -->
+  <main class="container">
+    <!-- Tampilan 1: Halaman Profile -->
+    <section class="card" id="sectionProfile">
+      <div class="avatar">R</div>
+      <div class="profile-title">Rifat</div>
+      <div class="profile-sub">Sistem Komputer • Universitas Pamulang (UNPAM) Serang</div>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 1.5rem;">
+        Selamat datang di portal proyek IoT. Klik menu <strong>Profile ▾</strong> di pojok kanan atas atau tombol di bawah untuk memantau data sensor secara realtime.
+      </p>
+      <button class="btn-primary" onclick="bukaHalaman('iot')">
+        Buka Monitoring Tempat Sampah Pintar →
+      </button>
+    </section>
+
+    <!-- Tampilan 2: Halaman Data Realtime Tempat Sampah Pintar -->
+    <section class="card hidden" id="sectionIot">
+      <div class="badge-live">● REALTIME IOT MONITORING</div>
+      <div class="label">Status Tutup Kotak Sampah</div>
+      <div class="val" id="nilai">Memuat...</div>
+
+      <div class="kapasitas-box">
+        <div class="label">Kapasitas Terisi</div>
+        <div class="kapasitas-angka" id="kapasitasText">--%</div>
+        <div class="progress-bg">
+          <div class="progress-fill" id="kapasitasBar"></div>
+        </div>
+      </div>
+
+      <div class="meta" id="status">Menghubungkan ke server SGP1...</div>
+    </section>
+  </main>
 
   <script>
     const BLYNK_SERVER = "https://sgp1.blynk.cloud";
     const AUTH_TOKEN = "qKsDtxnYUTqzItJOq8yynhLO0qoAlRDl";
-    const PIN = "v1";
+    let intervalId = null;
 
-    async function cekDataV1() {
-      try {
-        const url = `${BLYNK_SERVER}/external/api/get?token=${encodeURIComponent(AUTH_TOKEN)}&${PIN}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+    // Buka/tutup menu dropdown Profile
+    function toggleDropdown(event) {
+      event.stopPropagation();
+      document.getElementById("profileDropdown").classList.toggle("show");
+    }
+
+    // Tutup dropdown jika klik di luar menu
+    window.addEventListener("click", () => {
+      document.getElementById("profileDropdown").classList.remove("show");
+    });
+
+    // Navigasi antar tampilan
+    function bukaHalaman(halaman) {
+      const secProfile = document.getElementById("sectionProfile");
+      const secIot = document.getElementById("sectionIot");
+
+      if (halaman === "iot") {
+        secProfile.classList.add("hidden");
+        secIot.classList.remove("hidden");
+        ambilSemuaData();
+        if (!intervalId) {
+          intervalId = setInterval(ambilSemuaData, 3000);
         }
-        const nilai = await res.text();
-        document.getElementById("nilai").textContent = nilai;
-        document.getElementById("status").textContent =
-          "Update terakhir: " + new Date().toLocaleTimeString("id-ID");
-      } catch (err) {
-        document.getElementById("status").textContent = "Gagal ambil V1: " + err.message;
+      } else {
+        secIot.classList.add("hidden");
+        secProfile.classList.remove("hidden");
       }
     }
 
-    cekDataV1();
-    setInterval(cekDataV1, 5000);
+    // Ambil data realtime dari Blynk Cloud
+    async function ambilSemuaData() {
+      try {
+        const url = `${BLYNK_SERVER}/external/api/get?token=${encodeURIComponent(AUTH_TOKEN)}&v1&v3`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+        document.getElementById("nilai").textContent = data.v1 ?? "-";
+
+        const persen = Number(data.v3 ?? 0);
+        document.getElementById("kapasitasText").textContent = `${persen}%`;
+
+        const bar = document.getElementById("kapasitasBar");
+        bar.style.width = `${persen}%`;
+        if (persen >= 85) {
+          bar.style.backgroundColor = "#ef4444";
+        } else if (persen >= 60) {
+          bar.style.backgroundColor = "#eab308";
+        } else {
+          bar.style.backgroundColor = "#22c55e";
+        }
+
+        document.getElementById("status").textContent =
+          "Update terakhir: " + new Date().toLocaleTimeString("id-ID");
+      } catch (err) {
+        document.getElementById("status").textContent = "Gagal memuat data: " + err.message;
+      }
+    }
   </script>
 </body>
 </html>
